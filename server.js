@@ -1,3 +1,15 @@
+/********************************************************************************
+* WEB322 – Assignment 03
+*
+* I declare that this assignment is my own work in accordance with Seneca's
+* Academic Integrity Policy:
+*
+* https://www.senecapolytechnic.ca/about/policies/academic-integrity-policy.html
+*
+* Name: Dhruv Sharma Student ID: 180876237 Date: November 30, 2025
+*
+********************************************************************************/
+
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
