@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Management App</title>
+
+ 
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+<div class="container">
+
+<% const pageType = page || 'home'; %>
+
+
+<% if(pageType==='home'){ %>
+  <h1>Welcome to Task Management App</h1>
+  <% if(user){ %>
+    <p>Hello, <%= user.name %>!</p>
+    <div class="btn-group">
+      <button onclick="location.href='/dashboard?sid=<%= sid %>'">Dashboard</button>
+      <button onclick="location.href='/auth/logout?sid=<%= sid %>'">Logout</button>
+    </div>
+  <% } else { %>
+    <div class="btn-group">
+      <button onclick="location.href='/auth/login'">Login</button>
+      <button onclick="location.href='/auth/register'">Register</button>
+    </div>
+  <% } %>
+<% } %>
+
+
+<% if(pageType==='login'){ %>
+  <h1>Login</h1>
+  <% if(error){ %><p class="error-msg"><%= error %></p><% } %>
+  <form method="POST" action="/auth/login">
+    <input type="email" name="email" placeholder="Email" value="<%= email %>" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+    <button type="button" class="back-btn" onclick="location.href='/?sid=<%= sid %>'">Back</button>
+  </form>
+<% } %>
+
+
+<% if(pageType==='register'){ %>
+  <h1>Register</h1>
+  <% if(error){ %><p class="error-msg"><%= error %></p><% } %>
+  <form method="POST" action="/auth/register">
+    <input type="text" name="name" placeholder="Full Name" value="<%= name %>" required>
+    <input type="email" name="email" placeholder="Email" value="<%= email %>" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Register</button>
+    <button type="button" class="back-btn" onclick="location.href='/?sid=<%= sid %>'">Back</button>
+  </form>
+<% } %>
+
+
+<% if(pageType==='dashboard'){ %>
+  <h1>Dashboard</h1>
+  <p>Welcome, <%= user?.name || 'User' %>!</p>
+  <div class="btn-group">
+    <button onclick="location.href='/tasks?sid=<%= sid %>'">View Tasks</button>
+    <button onclick="location.href='/auth/logout?sid=<%= sid %>'">Logout</button>
+  </div>
+<% } %>
+
+
+<% if(pageType==='tasks'){ %>
+  <h1>Your Tasks</h1>
+
+  <div class="btn-group">
+    <button onclick="location.href='/tasks/add?sid=<%= sid %>'">Add New Task</button>
+    <button onclick="location.href='/dashboard?sid=<%= sid %>'">Back to Dashboard</button>
+  </div>
+
+  <% if(!tasks || tasks.length===0){ %>
+    <p>No tasks yet. Ready to create one?</p>
+  <% } else { %>
+    <ul id="tasks-list">
+      <% tasks.forEach((task,index)=>{ %>
+        <li class="task-item" draggable="true" data-id="<%= task._id %>">
+
+          
+          <span class="drag-handle">&#x2630;</span>
+
+          
+          <span class="task-number">#<%= index+1 %></span> - 
+          <strong><%= task.title %></strong>
+          <p><%= task.description %></p>
+
+          <p>
+            Added: <%= formatDateTime(task.startDate) %><br>
+            Due: <%= formatDateTime(task.dueDate) %>
+          </p>
+
+          <div class="btn-group task-actions">
+            <button onclick="location.href='/tasks/edit/<%= task._id %>?sid=<%= sid %>'">Edit</button>
+            <button onclick="if(confirm('Delete this task?')) location.href='/tasks/delete/<%= task._id %>?sid=<%= sid %>'">Delete</button>
+            <button onclick="location.href='/tasks/complete/<%= task._id %>?sid=<%= sid %>'">
+              <%= task.status==='completed'?'Mark Pending':'Mark Completed' %>
+            </button>
+          </div>
+
+          
+          <span class="status <%= task.status %>"><%= task.status %></span>
+
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+<% } %>
+
+
+<% if(pageType==='add-task'){ %>
+  <h1>Add Task</h1>
+  <form method="POST" action="/tasks/add?sid=<%= sid %>">
+
+    <input type="text" name="title" placeholder="Task Title" required>
+    <textarea name="description" placeholder="Task Description" rows="4" required></textarea>
+
+    <label>Start Date & Time:</label>
+    <input type="datetime-local" name="startDate" id="startDate" required>
+
+    <label>Due Date & Time:</label>
+    <input type="datetime-local" name="dueDate" id="dueDate" required>
+
+    <button type="submit" class="submit-btn">CREATE TASK</button>
+    <button type="button" class="back-btn" onclick="location.href='/tasks?sid=<%= sid %>'">Back to Task List</button>
+  </form>
+
+  <script>
+    const pad = n => String(n).padStart(2,'0');
+    const now = new Date();
+    const local = d =>
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+    document.getElementById('startDate').value = local(now);
+    document.getElementById('dueDate').value = local(now);
+  </script>
+<% } %>
+
+
+<% if(pageType==='edit-task' && task){ %>
+  <h1>Edit Task</h1>
+  <form method="POST" action="/tasks/edit/<%= task._id %>?sid=<%= sid %>">
+
+    <input type="text" name="title" value="<%= task.title %>" required>
+    <textarea name="description" rows="4" required><%= task.description %></textarea>
+
+    <label>Start Date & Time:</label>
+    <input type="datetime-local" name="startDate" value="<%= formatDateTimeInput(task.startDate) %>" required>
+
+    <label>Due Date & Time:</label>
+    <input type="datetime-local" name="dueDate" value="<%= formatDateTimeInput(task.dueDate) %>" required>
+
+    <button type="submit" class="submit-btn">UPDATE TASK</button>
+    <button type="button" class="back-btn" onclick="location.href='/tasks?sid=<%= sid %>'">Back to Task List</button>
+  </form>
+<% } %>
+
+</div> 
+
+</body>
+</html>
