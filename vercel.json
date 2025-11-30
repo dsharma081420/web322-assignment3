@@ -1,17 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "npm install",
-  "framework": "express",
-  "functions": {
-    "server.js": {
-      "runtime": "nodejs20.x"
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node",
+      "config": { 
+        "includeFiles": ["dist/**", "public/**", "styles/**"] 
+      }
     }
-  },
+  ],
   "routes": [
+    {
+      "src": "/dist/(.*)",
+      "dest": "/dist/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "server.js"
     }
-  ],
-
+  ]
 }
